@@ -1,0 +1,66 @@
+# Build artifacts
+*.o
+*.out
+*.a
+*.so
+*.dll
+*.exe
+
+# Executables
+netmonitor
+
+# Build directories
+build/
+bin/
+dist/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Debug
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+lcov.info
+
+# Logs
+*.log
+logs/
+
+# Runtime files
+*.pid
+*.sock
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Vim
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
