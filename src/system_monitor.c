@@ -2,26 +2,44 @@
 #include <stdio.h>
 #include <string.h>
 
-float get_cpu_temperature(void)
+#define CPU_TEMPERATURE_PATH "/sys/class/thermal/thermal_zone0/temp"
+
+NM_Status get_cpu_temperature(float *temperature)
 {
-  FILE *file = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+  NM_Status status = NM_ERROR;
+  FILE *file = NULL;
+  int temp_milli_celsius = 0;
+
+  if (temperature == NULL)
+  {
+    goto cleanup;
+  }
+
+  *temperature = 0.0f;
+
+  file = fopen(CPU_TEMPERATURE_PATH, "r");
 
   if (file == NULL)
   {
-    return -1.0f;
+    goto cleanup;
   }
-
-  int temp_milli_celsius;
 
   if (fscanf(file, "%d", &temp_milli_celsius) != 1)
   {
-    fclose(file);
-    return -1.0f;
+    goto cleanup;
   }
 
-  fclose(file);
+  *temperature = (float)temp_milli_celsius / 1000.0f;
 
-  return temp_milli_celsius / 1000.0f;
+  status = NM_OK;
+
+cleanup:
+  if (file != NULL)
+  {
+    fclose(file);
+  }
+
+  return status;
 }
 
 double get_uptime(void)

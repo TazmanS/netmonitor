@@ -5,6 +5,9 @@
 
 void start_app()
 {
+  float cpu_temperature;
+  get_cpu_temperature(&cpu_temperature);
+
   printf("\n");
   printf("=====================================\n");
   printf("            NetMonitor\n");
@@ -12,8 +15,7 @@ void start_app()
 
   printf("[ System ]\n");
 
-  printf("CPU Temperature : %.1f C\n",
-         get_cpu_temperature());
+  printf("CPU Temperature : %.1f C\n", cpu_temperature);
 
   printf("RAM Usage       : %.1f %%\n",
          get_ram_usage_percent());
