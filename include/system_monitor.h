@@ -10,6 +10,14 @@ typedef struct
   float fifteen_min;
 } nm_load_average_t;
 
+typedef struct
+{
+  float temperature;
+  double up_time;
+  float ram_usage;
+  nm_load_average_t load_average;
+} nm_system_state_t;
+
 nm_status_t get_cpu_temperature(float *temperature);
 nm_status_t get_uptime(double *up_time);
 nm_status_t get_ram_usage_percent(float *ram_usage);

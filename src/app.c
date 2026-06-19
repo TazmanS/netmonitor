@@ -3,7 +3,40 @@
 #include "system_monitor.h"
 #include "network_monitor.h"
 
-void start_app(void)
+nm_status_t init_app(app_context_t *context)
+{
+  nm_status_t status = NM_ERROR;
+
+  if (context == NULL)
+  {
+    goto cleanup;
+  }
+
+  *context = (app_context_t){0};
+
+  if (update_network_monitor("wlan0", &context->network_monitor) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  status = NM_OK;
+
+cleanup:
+
+  return status;
+}
+
+nm_status_t update_app(app_context_t *context)
+{
+  if (context == NULL)
+  {
+    return NM_ERROR;
+  }
+
+  return update_network_monitor("wlan0", &context->network_monitor);
+}
+
+void start_app(app_context_t *context)
 {
   float cpu_temperature = 0.0f;
   float ram_usage = 0.0f;
@@ -11,22 +44,14 @@ void start_app(void)
 
   nm_load_average_t load_average = {0};
 
-  nm_network_stats_t stats = {0};
   nm_network_speed_t speed = {0};
 
   get_cpu_temperature(&cpu_temperature);
   get_ram_usage_percent(&ram_usage);
   get_uptime(&uptime);
-
   get_load_average(&load_average);
 
-  get_network_stats(
-      "wlan0",
-      &stats);
-
-  get_network_speed(
-      "wlan0",
-      &speed);
+  calculate_network_speed(&context->network_monitor, &speed);
 
   printf("\n");
   printf("=====================================\n");
@@ -35,47 +60,35 @@ void start_app(void)
 
   printf("[ System ]\n");
 
-  printf("CPU Temperature : %.1f C\n",
-         cpu_temperature);
+  printf("CPU Temperature : %.1f C\n", cpu_temperature);
 
-  printf("RAM Usage       : %.1f %%\n",
-         ram_usage);
+  printf("RAM Usage       : %.1f %%\n", ram_usage);
 
-  printf("Uptime          : %.0f sec\n",
-         uptime);
+  printf("Uptime          : %.0f sec\n", uptime);
 
   printf("\n[ Load Average ]\n");
 
-  printf("1 minute        : %.2f\n",
-         load_average.one_min);
+  printf("1 minute        : %.2f\n", load_average.one_min);
 
-  printf("5 minutes       : %.2f\n",
-         load_average.five_min);
+  printf("5 minutes       : %.2f\n", load_average.five_min);
 
-  printf("15 minutes      : %.2f\n",
-         load_average.fifteen_min);
+  printf("15 minutes      : %.2f\n", load_average.fifteen_min);
 
   printf("\n[ Network: wlan0 ]\n");
 
-  printf("RX Bytes        : %llu\n",
-         stats.rx_bytes);
+  printf("RX Bytes        : %llu\n", context->network_monitor.current.rx_bytes);
 
-  printf("RX Packets      : %llu\n",
-         stats.rx_packets);
+  printf("RX Packets      : %llu\n", context->network_monitor.current.rx_packets);
 
-  printf("TX Bytes        : %llu\n",
-         stats.tx_bytes);
+  printf("TX Bytes        : %llu\n", context->network_monitor.current.tx_bytes);
 
-  printf("TX Packets      : %llu\n",
-         stats.tx_packets);
+  printf("TX Packets      : %llu\n", context->network_monitor.current.tx_packets);
 
   printf("\n[ Network Speed ]\n");
 
-  printf("Download        : %.2f KB/s\n",
-         speed.rx_bytes_per_sec / 1024.0);
+  printf("Download        : %.2f KB/s\n", speed.rx_bytes_per_sec / 1024.0);
 
-  printf("Upload          : %.2f KB/s\n",
-         speed.tx_bytes_per_sec / 1024.0);
+  printf("Upload          : %.2f KB/s\n", speed.tx_bytes_per_sec / 1024.0);
 
   printf("\n");
 }

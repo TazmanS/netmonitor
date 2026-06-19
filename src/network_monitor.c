@@ -1,7 +1,6 @@
 #include "network_monitor.h"
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #define NETWORK_STATS_PATH "/proc/net/dev"
 
@@ -67,36 +66,38 @@ cleanup:
   return status;
 }
 
-nm_status_t get_network_speed(const char *interface_name, nm_network_speed_t *speed)
+nm_status_t update_network_monitor(const char *interface_name, nm_network_monitor_t *monitor)
 {
   nm_status_t status = NM_ERROR;
 
-  nm_network_stats_t first = {0};
-  nm_network_stats_t second = {0};
+  if (interface_name == NULL || monitor == NULL)
+  {
+    goto cleanup;
+  }
 
-  if (interface_name == NULL || speed == NULL)
+  monitor->previous = monitor->current;
+
+  status = get_network_stats(interface_name, &monitor->current);
+
+cleanup:
+
+  return status;
+}
+
+nm_status_t calculate_network_speed(const nm_network_monitor_t *monitor, nm_network_speed_t *speed)
+{
+  nm_status_t status = NM_ERROR;
+
+  if (monitor == NULL || speed == NULL)
   {
     goto cleanup;
   }
 
   *speed = (nm_network_speed_t){0.0, 0.0};
 
-  if (get_network_stats(interface_name, &first) != NM_OK)
-  {
-    goto cleanup;
-  }
+  speed->rx_bytes_per_sec = (double)(monitor->current.rx_bytes - monitor->previous.rx_bytes);
 
-  sleep(1);
-
-  if (get_network_stats(interface_name, &second) != NM_OK)
-  {
-    goto cleanup;
-  }
-
-  speed->rx_bytes_per_sec = (double)(second.rx_bytes - first.rx_bytes);
-
-  speed->tx_bytes_per_sec = (double)(second.tx_bytes - first.tx_bytes);
-
+  speed->tx_bytes_per_sec = (double)(monitor->current.tx_bytes - monitor->previous.tx_bytes);
   status = NM_OK;
 
 cleanup:
