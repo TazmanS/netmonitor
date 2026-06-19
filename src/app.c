@@ -3,10 +3,30 @@
 #include "system_monitor.h"
 #include "network_monitor.h"
 
-void start_app()
+void start_app(void)
 {
-  float cpu_temperature;
+  float cpu_temperature = 0.0f;
+  float ram_usage = 0.0f;
+  double uptime = 0.0;
+
+  nm_load_average_t load_average = {0};
+
+  nm_network_stats_t stats = {0};
+  nm_network_speed_t speed = {0};
+
   get_cpu_temperature(&cpu_temperature);
+  get_ram_usage_percent(&ram_usage);
+  get_uptime(&uptime);
+
+  get_load_average(&load_average);
+
+  get_network_stats(
+      "wlan0",
+      &stats);
+
+  get_network_speed(
+      "wlan0",
+      &speed);
 
   printf("\n");
   printf("=====================================\n");
@@ -15,32 +35,25 @@ void start_app()
 
   printf("[ System ]\n");
 
-  printf("CPU Temperature : %.1f C\n", cpu_temperature);
+  printf("CPU Temperature : %.1f C\n",
+         cpu_temperature);
 
   printf("RAM Usage       : %.1f %%\n",
-         get_ram_usage_percent());
+         ram_usage);
 
   printf("Uptime          : %.0f sec\n",
-         get_uptime());
+         uptime);
 
-  LoadAverage load_average = get_load_average();
+  printf("\n[ Load Average ]\n");
 
-  if (load_average.one_min >= 0)
-  {
-    printf("\n[ Load Average ]\n");
+  printf("1 minute        : %.2f\n",
+         load_average.one_min);
 
-    printf("1 minute        : %.2f\n",
-           load_average.one_min);
+  printf("5 minutes       : %.2f\n",
+         load_average.five_min);
 
-    printf("5 minutes       : %.2f\n",
-           load_average.five_min);
-
-    printf("15 minutes      : %.2f\n",
-           load_average.fifteen_min);
-  }
-
-  NetworkStats stats =
-      get_network_stats("wlan0");
+  printf("15 minutes      : %.2f\n",
+         load_average.fifteen_min);
 
   printf("\n[ Network: wlan0 ]\n");
 
@@ -55,9 +68,6 @@ void start_app()
 
   printf("TX Packets      : %llu\n",
          stats.tx_packets);
-
-  NetworkSpeed speed =
-      get_network_speed("wlan0");
 
   printf("\n[ Network Speed ]\n");
 

@@ -3,10 +3,16 @@
 #include <string.h>
 
 #define CPU_TEMPERATURE_PATH "/sys/class/thermal/thermal_zone0/temp"
+#define UPTIME_PATH "/proc/uptime"
+#define RAM_USAGE_PATH "/proc/meminfo"
+#define LOAD_AVERAGE_PATH "/proc/loadavg"
 
-NM_Status get_cpu_temperature(float *temperature)
+#define MEM_TOTAL "MemTotal:"
+#define MEM_AVAILABLE "MemAvailable:"
+
+nm_status_t get_cpu_temperature(float *temperature)
 {
-  NM_Status status = NM_ERROR;
+  nm_status_t status = NM_ERROR;
   FILE *file = NULL;
   int temp_milli_celsius = 0;
 
@@ -42,50 +48,77 @@ cleanup:
   return status;
 }
 
-double get_uptime(void)
+nm_status_t get_uptime(double *up_time)
 {
-  FILE *file = fopen("/proc/uptime", "r");
+  nm_status_t status = NM_ERROR;
+  FILE *file = NULL;
+
+  if (up_time == NULL)
+  {
+    goto cleanup;
+  }
+
+  *up_time = 0.0;
+  file = fopen(UPTIME_PATH, "r");
 
   if (file == NULL)
   {
-    return 0;
+    goto cleanup;
   }
 
-  double up_time;
+  if (fscanf(file, "%lf", up_time) != 1)
+  {
+    goto cleanup;
+  }
 
-  if (fscanf(file, "%lf", &up_time) != 1)
+  status = NM_OK;
+
+cleanup:
+  if (file != NULL)
   {
     fclose(file);
-    return 0;
   }
 
-  fclose(file);
-  return up_time;
+  return status;
 }
 
-float get_ram_usage_percent(void)
+nm_status_t get_ram_usage_percent(float *ram_usage)
 {
-  FILE *file = fopen("/proc/meminfo", "r");
-
-  if (file == NULL)
-  {
-    return -1.0f;
-  }
+  FILE *file = NULL;
+  nm_status_t status = NM_ERROR;
 
   char line[256];
-
   long mem_total = 0;
   long mem_available = 0;
 
+  if (ram_usage == NULL)
+  {
+    goto cleanup;
+  }
+
+  *ram_usage = 0.0f;
+
+  file = fopen(RAM_USAGE_PATH, "r");
+  if (file == NULL)
+  {
+    goto cleanup;
+  }
+
   while (fgets(line, sizeof(line), file))
   {
-    if (strncmp(line, "MemTotal:", 9) == 0)
+    if (strncmp(line, MEM_TOTAL, strlen(MEM_TOTAL)) == 0)
     {
-      sscanf(line, "MemTotal: %ld", &mem_total);
+      if (sscanf(line, MEM_TOTAL " %ld", &mem_total) != 1)
+      {
+        goto cleanup;
+      }
     }
-    else if (strncmp(line, "MemAvailable:", 13) == 0)
+    else if (strncmp(line, MEM_AVAILABLE, strlen(MEM_AVAILABLE)) == 0)
     {
-      sscanf(line, "MemAvailable: %ld", &mem_available);
+      if (sscanf(line, MEM_AVAILABLE " %ld", &mem_available) != 1)
+      {
+        goto cleanup;
+      }
     }
 
     if (mem_total > 0 && mem_available > 0)
@@ -94,45 +127,61 @@ float get_ram_usage_percent(void)
     }
   }
 
-  fclose(file);
-
-  if (mem_total == 0)
+  if (mem_total == 0 || mem_available == 0)
   {
-    return -1.0f;
+    goto cleanup;
   }
 
-  long used = mem_total - mem_available;
+  *ram_usage = (float)(mem_total - mem_available) / mem_total * 100.0f;
 
-  return (float)used / mem_total * 100.0f;
+  status = NM_OK;
+
+cleanup:
+  if (file != NULL)
+  {
+    fclose(file);
+  }
+
+  return status;
 }
 
-LoadAverage get_load_average(void)
+nm_status_t get_load_average(nm_load_average_t *load_average)
 {
-  LoadAverage load = {
-      -1.0f,
-      -1.0f,
-      -1.0f};
-  FILE *file = fopen("/proc/loadavg", "r");
+  nm_status_t status = NM_ERROR;
+  FILE *file = NULL;
 
-  if (file == NULL)
+  if (load_average == NULL)
   {
-    return load;
+    goto cleanup;
   }
 
-  LoadAverage load_average = {
+  *load_average = (nm_load_average_t){
       0.0f,
       0.0f,
       0.0f};
 
-  if (fscanf(file, "%f %f %f",
-             &load_average.one_min,
-             &load_average.five_min,
-             &load_average.fifteen_min) != 3)
+  file = fopen(LOAD_AVERAGE_PATH, "r");
+
+  if (file == NULL)
   {
-    fclose(file);
-    return load;
+    goto cleanup;
   }
 
-  fclose(file);
-  return load_average;
+  if (fscanf(file, "%f %f %f",
+             &load_average->one_min,
+             &load_average->five_min,
+             &load_average->fifteen_min) != 3)
+  {
+    goto cleanup;
+  }
+
+  status = NM_OK;
+
+cleanup:
+  if (file != NULL)
+  {
+    fclose(file);
+  }
+
+  return status;
 }
