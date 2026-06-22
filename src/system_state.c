@@ -1,4 +1,4 @@
-#include "system_monitor.h"
+#include "system_state.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -10,7 +10,12 @@
 #define MEM_TOTAL "MemTotal:"
 #define MEM_AVAILABLE "MemAvailable:"
 
-nm_status_t get_cpu_temperature(float *temperature)
+static nm_status_t get_cpu_temperature(float *temperature);
+static nm_status_t get_uptime(double *up_time);
+static nm_status_t get_ram_usage_percent(float *ram_usage);
+static nm_status_t get_load_average(nm_load_average_t *load_average);
+
+static nm_status_t get_cpu_temperature(float *temperature)
 {
   nm_status_t status = NM_ERROR;
   FILE *file = NULL;
@@ -48,7 +53,7 @@ cleanup:
   return status;
 }
 
-nm_status_t get_uptime(double *up_time)
+static nm_status_t get_uptime(double *up_time)
 {
   nm_status_t status = NM_ERROR;
   FILE *file = NULL;
@@ -82,7 +87,7 @@ cleanup:
   return status;
 }
 
-nm_status_t get_ram_usage_percent(float *ram_usage)
+static nm_status_t get_ram_usage_percent(float *ram_usage)
 {
   FILE *file = NULL;
   nm_status_t status = NM_ERROR;
@@ -145,7 +150,7 @@ cleanup:
   return status;
 }
 
-nm_status_t get_load_average(nm_load_average_t *load_average)
+static nm_status_t get_load_average(nm_load_average_t *load_average)
 {
   nm_status_t status = NM_ERROR;
   FILE *file = NULL;
@@ -183,5 +188,39 @@ cleanup:
     fclose(file);
   }
 
+  return status;
+}
+
+nm_status_t update_system_state(nm_system_state_t *state)
+{
+  nm_status_t status = NM_ERROR;
+
+  if (state == NULL)
+  {
+    goto cleanup;
+  }
+
+  if (get_cpu_temperature(&state->temperature) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  if (get_uptime(&state->up_time) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  if (get_ram_usage_percent(&state->ram_usage) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  if (get_load_average(&state->load_average) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  status = NM_OK;
+cleanup:
   return status;
 }

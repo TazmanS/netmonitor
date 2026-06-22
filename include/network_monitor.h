@@ -22,10 +22,9 @@ typedef struct
 {
   nm_network_stats_t previous;
   nm_network_stats_t current;
+  nm_network_speed_t network_speed;
 } nm_network_monitor_t;
 
-nm_status_t get_network_stats(const char *interface_name, nm_network_stats_t *stats);
 nm_status_t update_network_monitor(const char *interface_name, nm_network_monitor_t *monitor);
-nm_status_t calculate_network_speed(const nm_network_monitor_t *monitor, nm_network_speed_t *speed);
 
 #endif

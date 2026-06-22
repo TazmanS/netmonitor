@@ -16,7 +16,7 @@ int main(void)
 
     update_app(&context);
 
-    start_app(&context);
+    print_app(&context);
   }
 
   return 0;
