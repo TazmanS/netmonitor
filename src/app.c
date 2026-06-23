@@ -2,8 +2,11 @@
 #include "app.h"
 #include "system_state.h"
 #include "network_monitor.h"
+#include "cpu_monitor.h"
 
-nm_status_t init_app(app_context_t *context)
+static nm_status_t refresh_app_context(app_context_t *context);
+
+static nm_status_t refresh_app_context(app_context_t *context)
 {
   nm_status_t status = NM_ERROR;
 
@@ -12,9 +15,21 @@ nm_status_t init_app(app_context_t *context)
     goto cleanup;
   }
 
-  *context = (app_context_t){0};
+  if (update_network_monitor(
+          "wlan0",
+          &context->network_monitor) != NM_OK)
+  {
+    goto cleanup;
+  }
 
-  if (update_network_monitor("wlan0", &context->network_monitor) != NM_OK)
+  if (update_system_state(
+          &context->system_state) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  if (update_cpu_monitor(
+          &context->cpu_monitor) != NM_OK)
   {
     goto cleanup;
   }
@@ -26,28 +41,21 @@ cleanup:
   return status;
 }
 
-nm_status_t update_app(app_context_t *context)
+nm_status_t init_app(app_context_t *context)
 {
-  nm_status_t status = NM_ERROR;
   if (context == NULL)
   {
-    goto cleanup;
+    return NM_ERROR;
   }
 
-  if (update_network_monitor("wlan0", &context->network_monitor) != NM_OK)
-  {
-    goto cleanup;
-  }
+  *context = (app_context_t){0};
 
-  if (update_system_state(&context->system_state) != NM_OK)
-  {
-    goto cleanup;
-  }
+  return refresh_app_context(context);
+}
 
-  status = NM_OK;
-
-cleanup:
-  return status;
+nm_status_t update_app(app_context_t *context)
+{
+  return refresh_app_context(context);
 }
 
 void print_app(app_context_t *context)
@@ -88,6 +96,8 @@ void print_app(app_context_t *context)
   printf("Download        : %.2f KB/s\n", context->network_monitor.network_speed.rx_bytes_per_sec / 1024.0);
 
   printf("Upload          : %.2f KB/s\n", context->network_monitor.network_speed.tx_bytes_per_sec / 1024.0);
+
+  printf("CPU Usage       : %.1f %%\n", context->cpu_monitor.usage_percent);
 
   printf("\n");
 }
