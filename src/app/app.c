@@ -1,8 +1,5 @@
-#include "stdio.h"
 #include "app.h"
-#include "system_state.h"
-#include "network_monitor.h"
-#include "cpu_monitor.h"
+#include <stdio.h>
 
 static nm_status_t refresh_app_context(app_context_t *context);
 
@@ -15,21 +12,22 @@ static nm_status_t refresh_app_context(app_context_t *context)
     goto cleanup;
   }
 
-  if (update_network_monitor(
-          "wlan0",
-          &context->network_monitor) != NM_OK)
+  if (update_network_monitor("wlan0", &context->network_monitor) != NM_OK)
   {
     goto cleanup;
   }
 
-  if (update_system_state(
-          &context->system_state) != NM_OK)
+  if (update_system_state(&context->system_state) != NM_OK)
   {
     goto cleanup;
   }
 
-  if (update_cpu_monitor(
-          &context->cpu_monitor) != NM_OK)
+  if (update_cpu_monitor(&context->cpu_monitor) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  if (update_tcp_state(&context->tcp_state) != NM_OK)
   {
     goto cleanup;
   }
@@ -98,6 +96,16 @@ void print_app(app_context_t *context)
   printf("Upload          : %.2f KB/s\n", context->network_monitor.network_speed.tx_bytes_per_sec / 1024.0);
 
   printf("CPU Usage       : %.1f %%\n", context->cpu_monitor.usage_percent);
+
+  for (unsigned int i = 0; i < context->tcp_state.connection_count; i++)
+  {
+    printf("%s:%d | %s:%d | %s\n",
+           context->tcp_state.connections[i].local_ip,
+           context->tcp_state.connections[i].local_port,
+           context->tcp_state.connections[i].remote_ip,
+           context->tcp_state.connections[i].remote_port,
+           context->tcp_state.connections[i].state);
+  }
 
   printf("\n");
 }
