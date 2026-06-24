@@ -30,8 +30,7 @@ nm_status_t update_tcp_state(nm_tcp_state_t *state)
 
   unsigned int index = 0;
 
-  while (fgets(line, sizeof(line), file) &&
-         index < NM_MAX_TCP_CONNECTIONS)
+  while (fgets(line, sizeof(line), file) && index < NM_MAX_TCP_CONNECTIONS)
   {
     char local_address[32] = {0};
     char remote_address[32] = {0};
@@ -39,39 +38,28 @@ nm_status_t update_tcp_state(nm_tcp_state_t *state)
 
     nm_tcp_connection_t *connection = &state->connections[index];
 
-    if (sscanf(
-            line,
-            "%*d: %31s %31s %3s",
-            local_address,
-            remote_address,
-            state_code) != 3)
+    if (sscanf(line, "%*d: %31s %31s %3s", local_address, remote_address,
+               state_code) != 3)
     {
       continue;
     }
 
-    if (parse_tcp_address(
-            local_address,
-            connection->local_ip,
-            sizeof(connection->local_ip),
-            &connection->local_port) != NM_OK)
+    if (parse_tcp_address(local_address, connection->local_ip,
+                          sizeof(connection->local_ip),
+                          &connection->local_port) != NM_OK)
     {
       continue;
     }
 
-    if (parse_tcp_address(
-            remote_address,
-            connection->remote_ip,
-            sizeof(connection->remote_ip),
-            &connection->remote_port) != NM_OK)
+    if (parse_tcp_address(remote_address, connection->remote_ip,
+                          sizeof(connection->remote_ip),
+                          &connection->remote_port) != NM_OK)
     {
       continue;
     }
 
-    snprintf(
-        connection->state,
-        sizeof(connection->state),
-        "%s",
-        tcp_state_to_string(state_code));
+    snprintf(connection->state, sizeof(connection->state), "%s",
+             tcp_state_to_string(state_code));
 
     index++;
   }

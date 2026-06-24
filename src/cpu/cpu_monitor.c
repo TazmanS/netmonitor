@@ -1,7 +1,7 @@
 #include "cpu_monitor.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #define CPU_MONITOR_PATH "/proc/stat"
 
@@ -35,16 +35,8 @@ static nm_status_t get_cpu_times(nm_cpu_times_t *times)
     goto cleanup;
   }
 
-  if (fscanf(file,
-             "%7s %llu %llu %llu %llu %llu %llu %llu",
-             cpu_label,
-             &user,
-             &nice,
-             &system,
-             &idle,
-             &iowait,
-             &irq,
-             &softirq) != 8)
+  if (fscanf(file, "%7s %llu %llu %llu %llu %llu %llu %llu", cpu_label, &user,
+             &nice, &system, &idle, &iowait, &irq, &softirq) != 8)
   {
     goto cleanup;
   }
@@ -78,16 +70,19 @@ nm_status_t update_cpu_monitor(nm_cpu_monitor_t *monitor)
     goto cleanup;
   }
 
-  unsigned long long total_delta = monitor->current.total - monitor->previous.total;
+  unsigned long long total_delta =
+      monitor->current.total - monitor->previous.total;
 
-  unsigned long long idle_delta = monitor->current.idle - monitor->previous.idle;
+  unsigned long long idle_delta =
+      monitor->current.idle - monitor->previous.idle;
 
   if (total_delta == 0)
   {
     goto cleanup;
   }
 
-  monitor->usage_percent = (1.0f - ((float)idle_delta / (float)total_delta)) * 100.0f;
+  monitor->usage_percent =
+      (1.0f - ((float)idle_delta / (float)total_delta)) * 100.0f;
 
   status = NM_OK;
 

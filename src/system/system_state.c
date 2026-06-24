@@ -160,10 +160,7 @@ static nm_status_t get_load_average(nm_load_average_t *load_average)
     goto cleanup;
   }
 
-  *load_average = (nm_load_average_t){
-      0.0f,
-      0.0f,
-      0.0f};
+  *load_average = (nm_load_average_t){0.0f, 0.0f, 0.0f};
 
   file = fopen(LOAD_AVERAGE_PATH, "r");
 
@@ -172,9 +169,7 @@ static nm_status_t get_load_average(nm_load_average_t *load_average)
     goto cleanup;
   }
 
-  if (fscanf(file, "%f %f %f",
-             &load_average->one_min,
-             &load_average->five_min,
+  if (fscanf(file, "%f %f %f", &load_average->one_min, &load_average->five_min,
              &load_average->fifteen_min) != 3)
   {
     goto cleanup;

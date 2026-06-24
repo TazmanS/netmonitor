@@ -1,11 +1,11 @@
 #ifndef APP_H
 #define APP_H
 
+#include "../cpu/cpu_monitor.h"
+#include "../network/network_info.h"
 #include "../network/network_monitor.h"
 #include "../system/system_state.h"
-#include "../cpu/cpu_monitor.h"
 #include "../tcp/tcp_monitor.h"
-#include "../network/network_info.h"
 
 typedef struct
 {

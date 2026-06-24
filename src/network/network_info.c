@@ -7,7 +7,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-nm_status_t get_network_info(const char *interface_name, nm_network_info_t *info)
+nm_status_t get_network_info(const char *interface_name,
+                             nm_network_info_t *info)
 {
   nm_status_t status = NM_ERROR;
 
@@ -38,11 +39,8 @@ nm_status_t get_network_info(const char *interface_name, nm_network_info_t *info
 
   struct sockaddr_in *address = (struct sockaddr_in *)&ifr.ifr_addr;
 
-  if (inet_ntop(
-          AF_INET,
-          &address->sin_addr,
-          info->ip_address,
-          sizeof(info->ip_address)) == NULL)
+  if (inet_ntop(AF_INET, &address->sin_addr, info->ip_address,
+                sizeof(info->ip_address)) == NULL)
   {
     goto cleanup;
   }

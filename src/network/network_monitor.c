@@ -1,13 +1,15 @@
 #include "network_monitor.h"
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #define NETWORK_STATS_PATH "/proc/net/dev"
 
-static nm_status_t get_network_stats(const char *interface_name, nm_network_stats_t *stats);
+static nm_status_t get_network_stats(const char *interface_name,
+                                     nm_network_stats_t *stats);
 static nm_status_t calculate_network_speed(nm_network_monitor_t *monitor);
 
-static nm_status_t get_network_stats(const char *interface_name, nm_network_stats_t *stats)
+static nm_status_t get_network_stats(const char *interface_name,
+                                     nm_network_stats_t *stats)
 {
   nm_status_t status = NM_ERROR;
   FILE *file = NULL;
@@ -36,14 +38,8 @@ static nm_status_t get_network_stats(const char *interface_name, nm_network_stat
     unsigned long long tx_bytes = 0;
     unsigned long long tx_packets = 0;
 
-    if (sscanf(
-            line,
-            " %31[^:]: %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu",
-            iface,
-            &rx_bytes,
-            &rx_packets,
-            &tx_bytes,
-            &tx_packets) == 5)
+    if (sscanf(line, " %31[^:]: %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu",
+               iface, &rx_bytes, &rx_packets, &tx_bytes, &tx_packets) == 5)
     {
       if (strcmp(iface, interface_name) == 0)
       {
@@ -79,12 +75,10 @@ static nm_status_t calculate_network_speed(nm_network_monitor_t *monitor)
   }
 
   monitor->network_speed.rx_bytes_per_sec =
-      (double)(monitor->current.rx_bytes -
-               monitor->previous.rx_bytes);
+      (double)(monitor->current.rx_bytes - monitor->previous.rx_bytes);
 
   monitor->network_speed.tx_bytes_per_sec =
-      (double)(monitor->current.tx_bytes -
-               monitor->previous.tx_bytes);
+      (double)(monitor->current.tx_bytes - monitor->previous.tx_bytes);
   status = NM_OK;
 
 cleanup:
@@ -92,7 +86,8 @@ cleanup:
   return status;
 }
 
-nm_status_t update_network_monitor(const char *interface_name, nm_network_monitor_t *monitor)
+nm_status_t update_network_monitor(const char *interface_name,
+                                   nm_network_monitor_t *monitor)
 {
   nm_status_t status = NM_ERROR;
 
