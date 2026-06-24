@@ -48,6 +48,13 @@ nm_status_t init_app(app_context_t *context)
 
   *context = (app_context_t){0};
 
+  if (get_network_info(
+          "wlan0",
+          &context->network_info) != NM_OK)
+  {
+    return NM_ERROR;
+  }
+
   return refresh_app_context(context);
 }
 
@@ -106,6 +113,8 @@ void print_app(app_context_t *context)
            context->tcp_state.connections[i].remote_port,
            context->tcp_state.connections[i].state);
   }
+
+  printf("IP Address : %s\n", context->network_info.ip_address);
 
   printf("\n");
 }

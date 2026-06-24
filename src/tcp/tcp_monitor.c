@@ -37,8 +37,7 @@ nm_status_t update_tcp_state(nm_tcp_state_t *state)
     char remote_address[32] = {0};
     char state_code[4] = {0};
 
-    nm_tcp_connection_t *connection =
-        &state->connections[index];
+    nm_tcp_connection_t *connection = &state->connections[index];
 
     if (sscanf(
             line,
