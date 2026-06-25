@@ -12,7 +12,8 @@ static nm_status_t refresh_app_context(app_context_t *context)
     goto cleanup;
   }
 
-  if (update_network_monitor("wlan0", &context->network_monitor) != NM_OK)
+  if (update_network_monitor(WLAN_INTERFACE, &context->network_monitor) !=
+      NM_OK)
   {
     goto cleanup;
   }
@@ -48,7 +49,7 @@ nm_status_t init_app(app_context_t *context)
 
   *context = (app_context_t){0};
 
-  if (get_network_info("wlan0", &context->network_info) != NM_OK)
+  if (get_network_info(WLAN_INTERFACE, &context->network_info) != NM_OK)
   {
     return NM_ERROR;
   }
@@ -148,9 +149,13 @@ void print_app(app_context_t *context)
 
   printf("\n[ Network Info ]\n");
 
-  printf("%-15s : %s\n", "Interface", "wlan0");
+  printf("%-15s : %s\n", "Interface", WLAN_INTERFACE);
 
   printf("%-15s : %s\n", "IP Address", context->network_info.ip_address);
+
+  printf("%-15s : %s\n", "Netmask", context->network_info.netmask);
+
+  printf("%-15s : %s\n", "Gateway", context->network_info.gateway);
 
   printf("\n[ Network Statistics ]\n");
 
