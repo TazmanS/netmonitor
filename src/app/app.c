@@ -157,6 +157,8 @@ void print_app(app_context_t *context)
 
   printf("%-15s : %s\n", "Gateway", context->network_info.gateway);
 
+  printf("%-15s : %s\n", "MAC Address", context->network_info.mac_address);
+
   printf("\n[ Network Statistics ]\n");
 
   printf("%-15s : %s\n", "RX Data", rx_data);

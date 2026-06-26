@@ -12,11 +12,18 @@
 
 #define GATEWAY_PATH "/proc/net/route"
 
+// ***********************STATIC***************************************************
+
 static nm_status_t get_network_ip_address(const char *interface_name,
                                           char *ip_address);
 static nm_status_t get_network_mask(const char *interface_name, char *mask);
 static nm_status_t get_network_gateway(const char *interface_name,
                                        char *gateway);
+static nm_status_t get_network_mac_address(const char *interface_name,
+                                           char *mac_address);
+static nm_status_t get_network_mtu(const char *interface_name, int *mtu);
+
+// ********************************************************************************
 
 static nm_status_t get_network_ip_address(const char *interface_name,
                                           char *ip_address)
@@ -171,6 +178,55 @@ cleanup:
   return status;
 }
 
+static nm_status_t get_network_mac_address(const char *interface_name,
+                                           char *mac_address)
+{
+  nm_status_t status = NM_ERROR;
+  int socket_fd = -1;
+  struct ifreq ifr;
+
+  if (interface_name == NULL || mac_address == NULL)
+  {
+    goto cleanup;
+  }
+
+  ifr = (struct ifreq){0};
+
+  socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+  if (socket_fd < 0)
+  {
+    goto cleanup;
+  }
+
+  strncpy(ifr.ifr_name, interface_name, IFNAMSIZ - 1);
+
+  if (ioctl(socket_fd, SIOCGIFHWADDR, &ifr) < 0)
+  {
+    goto cleanup;
+  }
+
+  unsigned char *mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
+
+  snprintf(mac_address, 18, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1],
+           mac[2], mac[3], mac[4], mac[5]);
+
+  status = NM_OK;
+
+cleanup:
+  if (socket_fd >= 0)
+  {
+    close(socket_fd);
+  }
+  return status;
+}
+
+static nm_status_t get_network_mtu(const char *interface_name, int *mtu)
+{
+
+  return NM_OK;
+}
+
 nm_status_t get_network_info(const char *interface_name,
                              nm_network_info_t *info)
 {
@@ -194,6 +250,11 @@ nm_status_t get_network_info(const char *interface_name,
   }
 
   if (get_network_gateway(interface_name, info->gateway) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  if (get_network_mac_address(interface_name, info->mac_address) != NM_OK)
   {
     goto cleanup;
   }
