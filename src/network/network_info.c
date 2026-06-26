@@ -223,8 +223,43 @@ cleanup:
 
 static nm_status_t get_network_mtu(const char *interface_name, int *mtu)
 {
+  nm_status_t status = NM_ERROR;
 
-  return NM_OK;
+  int socket_fd = -1;
+  struct ifreq ifr;
+
+  if (interface_name == NULL || mtu == NULL)
+  {
+    goto cleanup;
+  }
+
+  ifr = (struct ifreq){0};
+
+  socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+  if (socket_fd < 0)
+  {
+    goto cleanup;
+  }
+
+  strncpy(ifr.ifr_name, interface_name, IFNAMSIZ - 1);
+
+  if (ioctl(socket_fd, SIOCGIFMTU, &ifr) < 0)
+  {
+    goto cleanup;
+  }
+
+  *mtu = ifr.ifr_mtu;
+
+  status = NM_OK;
+
+cleanup:
+  if (socket_fd >= 0)
+  {
+    close(socket_fd);
+  }
+
+  return status;
 }
 
 nm_status_t get_network_info(const char *interface_name,
@@ -255,6 +290,11 @@ nm_status_t get_network_info(const char *interface_name,
   }
 
   if (get_network_mac_address(interface_name, info->mac_address) != NM_OK)
+  {
+    goto cleanup;
+  }
+
+  if (get_network_mtu(interface_name, &info->mtu) != NM_OK)
   {
     goto cleanup;
   }
